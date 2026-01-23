@@ -1,0 +1,486 @@
+{
+  "name": "03_admin_refund_handler",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Spending",
+        "height": 208,
+        "width": 288,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "05ae9c8e-bd93-4d58-83ff-8c7af8c90073",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Earning",
+        "height": 240,
+        "width": 448,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "cfb0d8c2-77ea-4862-b091-8cfd2043c14e",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1248,
+        320
+      ],
+      "id": "7938bf69-c089-4d51-87c1-8565a3681cec",
+      "name": "Admin Button Click (Trigger)",
+      "webhookId": "46a48485-2f7d-4570-8b6c-f22afc83448f",
+      "credentials": {
+        "telegramApi": {
+          "id": "WQOen7Stuv786V3K",
+          "name": "Telegram test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get data from the clicked button\nconst item = items[0].json;\nconst buttonData = item.data || (item.callback_query && item.callback_query.data);\n\nif (!buttonData) throw new Error(\"No callback data found in button\");\n\n// Data format: action|phone|amount1|amount2\nconst parts = buttonData.split('|');\n\nreturn {\n  json: {\n    action: parts[0], // 'undo_add' or 'undo_mix'\n    phone: parts[1],\n    amount1: parseInt(parts[2]), // Primary amount\n    amount2: parseInt(parts[3]) || 0 // Secondary amount (for mixed payments)\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        320
+      ],
+      "id": "ab6a0406-1fbf-491d-8be4-6af90e464cfc",
+      "name": "Parse Button Data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/access_token",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apiLogin",
+              "value": "REPLACE_WITH_SECRET"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -800,
+        320
+      ],
+      "id": "05edfcf3-1db1-4d7b-a063-7dd5ea196a09",
+      "name": "iiko Auth (Get Token)",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/loyalty/iiko/customer/info",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('iiko Auth (Get Token)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organizationId\": \"org_id\",\n  \"phone\": \"+7{{ $('Parse Button Data').item.json.phone.toString().replace(/\\D/g, '').slice(-10) }}\",\n  \"type\": \"phone\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -560,
+        320
+      ],
+      "id": "af43df8f-7fff-4a2b-9860-9446c1e9881c",
+      "name": "Fetch Customer Wallet",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Parse Button Data').item.json.action }}",
+                    "rightValue": "undo_add",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0c3ffd14-d854-4681-8527-951873a1055a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "undo_add"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f42ca719-44de-4cb8-993b-e412fa97b0c1",
+                    "leftValue": "={{ $('Parse Button Data').item.json.action }}",
+                    "rightValue": "undo_mix",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "undo_mix"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -320,
+        320
+      ],
+      "id": "c948fc1f-a45c-49fd-a4f1-ede6c46a3070",
+      "name": "Router: Refund Type"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/loyalty/iiko/customer/wallet/chargeoff",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('iiko Auth (Get Token)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organizationId\": \"org_id\",\n  \"customerId\": \"{{ $json.id }}\",\n  \"walletId\": \"my_id\",\n  \"sum\": {{ $('Parse Button Data').item.json.amount1 }},\n  \"comment\": \"Order Cancelled (Revert Accrual)\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        80,
+        48
+      ],
+      "id": "2060c689-e30d-4379-aac2-9aca6a95a0ea",
+      "name": "Revoke Accrued Points",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/loyalty/iiko/customer/wallet/topup",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('iiko Auth (Get Token)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organizationId\": \"org_id\",\n  \"customerId\": \"{{ $json.id }}\",\n  \"walletId\": \"my_id\",\n  \"sum\": {{ $('Parse Button Data').item.json.amount1 }},\n  \"comment\": \"Refund Spent Points (Order Cancelled)\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -32,
+        336
+      ],
+      "id": "b868ff11-ae7d-4aba-897e-95f232664b53",
+      "name": "Refund: Return Spent Points",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('Admin Button Click (Trigger)').item.json.callback_query.id }}",
+        "additionalFields": {
+          "text": "✅ The bonuses reverted to the opposite state"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        336
+      ],
+      "id": "d770c5e6-a42d-4f3c-a779-ac154220929a",
+      "name": "Stop Button Loading",
+      "webhookId": "11fc53fa-22bc-4f14-aacf-7eb3a8211c21",
+      "credentials": {
+        "telegramApi": {
+          "id": "WQOen7Stuv786V3K",
+          "name": "Telegram test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Admin Button Click (Trigger)').item.json.callback_query.message.chat.id }}",
+        "messageId": "={{ $('Admin Button Click (Trigger)').item.json.callback_query.message.message_id }}",
+        "text": "=❌ <b>Данный заказ отменен</b> \n(Начисленные бонусы были списаны/начислены обратно)\n\n<b>ИСТОРИЯ ЗАКАЗА:</b>\n{{ $('Admin Button Click (Trigger)').item.json.callback_query.message.text }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        336
+      ],
+      "id": "6dbd2fe5-1897-4ac2-9b87-b514c14b7afe",
+      "name": "Update Admin Message (RU)",
+      "webhookId": "d19ba53a-eda8-4c72-8d02-859cd656008b",
+      "credentials": {
+        "telegramApi": {
+          "id": "WQOen7Stuv786V3K",
+          "name": "Telegram test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "**Admin Refund Handler**\nTriggered when Admin clicks \"Cancel Order\" in Telegram.\n1.  **Parse:** Decodes hidden data in the button (Phone, Amounts, Action type).\n2.  **Auth:** Connects to iikoCard.\n3.  **Route:** Determines refund type:\n    *   **Simple:** Just revoke points earned.\n    *   **Mixed:** Return spent points AND revoke points earned on cash part.\n4.  **Update:** Changes message status to \"Cancelled\".",
+        "height": 288,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1664,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "873a0b51-a5c6-4609-8f74-75c49aab31b7",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "**Refund Logic Router**\n*   `undo_add`: Cancel accrual only (Customer didn't spend points).\n*   `undo_mix`: Full reversal (Customer spent points + paid remaining cash).",
+        "height": 176
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -384,
+        112
+      ],
+      "typeVersion": 1,
+      "id": "0b8126fa-5d63-4161-8449-02cbcc907342",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/loyalty/iiko/customer/wallet/chargeoff",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('iiko Auth (Get Token)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organizationId\": \"org_id\",\n  \"customerId\": \"{{ $('Router: Refund Type').item.json.id }}\",\n  \"walletId\": \"my_id\",\n  \"sum\": {{ $('Parse Button Data').item.json.amount2 }},\n  \"comment\": \"Revoke Accrual (Order Cancelled)\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        192,
+        336
+      ],
+      "id": "8309dee9-5664-4d80-bbc5-7922dacc02fe",
+      "name": "Revoke Cash-Part Points",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Admin Button Click (Trigger)": {
+      "main": [
+        [
+          {
+            "node": "Parse Button Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Button Data": {
+      "main": [
+        [
+          {
+            "node": "iiko Auth (Get Token)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "iiko Auth (Get Token)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Customer Wallet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Customer Wallet": {
+      "main": [
+        [
+          {
+            "node": "Router: Refund Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router: Refund Type": {
+      "main": [
+        [
+          {
+            "node": "Revoke Accrued Points",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Refund: Return Spent Points",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revoke Accrued Points": {
+      "main": [
+        [
+          {
+            "node": "Stop Button Loading",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refund: Return Spent Points": {
+      "main": [
+        [
+          {
+            "node": "Revoke Cash-Part Points",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stop Button Loading": {
+      "main": [
+        [
+          {
+            "node": "Update Admin Message (RU)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revoke Cash-Part Points": {
+      "main": [
+        [
+          {
+            "node": "Stop Button Loading",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Almaty",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "hqRcKQkYO4KNl7CpVzjbg"
+  },
+  "versionId": "7e4467d2-02ab-4356-91f6-c4f751339fec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "03b67b3e60aa493ec1244124aace506e5b72662a5ebfe65ae58c0d351a372da8"
+  },
+  "id": "2G2CemAcy0HxpbjE_CMQo",
+  "tags": []
+}

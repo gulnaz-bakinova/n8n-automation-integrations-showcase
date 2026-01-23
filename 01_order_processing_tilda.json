@@ -1,0 +1,829 @@
+{
+  "name": "01_order_processing_tilda",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Earning",
+        "height": 256,
+        "width": 1056,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        448
+      ],
+      "typeVersion": 1,
+      "id": "06cd60f6-0ff3-4e19-934f-66289c818596",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Spending",
+        "height": 240,
+        "width": 1056,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "118a2be3-28eb-4a19-b4d2-f9f306808366",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6da41e92-2b4b-44f7-8b1c-cd533e774999",
+              "leftValue": "={{ $json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -496,
+        176
+      ],
+      "id": "912fa65d-a2c6-42cc-8bee-8af33a5759ea",
+      "name": "Check Duplicate"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1IH1j7tDItMlfPUjawuXSywX83fMQ_6m9ToIN6exWiMk",
+          "mode": "list",
+          "cachedResultName": "n8n_execution_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IH1j7tDItMlfPUjawuXSywX83fMQ_6m9ToIN6exWiMk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IH1j7tDItMlfPUjawuXSywX83fMQ_6m9ToIN6exWiMk/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "order_id",
+              "lookupValue": "={{ $json.body.payment.orderid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -704,
+        176
+      ],
+      "id": "c24315a0-4372-48bb-b388-be99539c52b8",
+      "name": "Search Existing Order",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "22akbm2gYXgL33dL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tilda-order",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -912,
+        176
+      ],
+      "id": "43ee4582-bfd5-4682-acf3-ccc15cd863a3",
+      "name": "Receive Tilda Order",
+      "webhookId": "0ce86064-2e82-43c3-b471-60135625015b"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/access_token",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apiLogin",
+              "value": "my_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -256,
+        192
+      ],
+      "id": "c9137c48-1663-461d-a637-1dec5bca776c",
+      "name": "iiko Auth (Get Token)",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/loyalty/iiko/customer/create_or_update",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('iiko Auth (Get Token)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organizationId\": \"org_id\",\n  \"phone\": \"+7{{ ($('Receive Tilda Order').item.json.body.phone || $('Receive Tilda Order').item.json.body.Phone).toString().replace(/\\D/g, '').slice(-10) }}\",\n  \"name\": \"{{ $('Receive Tilda Order').item.json.body.name }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -16,
+        192
+      ],
+      "id": "fd2fe9f3-cbc3-482a-9a6a-d0befff6e7e9",
+      "name": "Sync Customer Profile",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "df188b1e-3ae0-4c35-b089-012da4709064",
+              "leftValue": "={{ $('Receive Tilda Order').item.json.body.spend_bonus }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        192
+      ],
+      "id": "85732a3d-7d82-42bf-a0cd-7dadf2830e20",
+      "name": "Router: Spend or Earn"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/loyalty/iiko/customer/info",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('iiko Auth (Get Token)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organizationId\": \"org_id\",\n  \"phone\": \"+7{{ ($('Receive Tilda Order').item.json.body.phone || $('Receive Tilda Order').item.json.body.Phone).toString().replace(/\\D/g, '').slice(-10) }}\",\n  \"type\": \"phone\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        464,
+        64
+      ],
+      "id": "aac6cc25-4657-4a5c-9107-6c24e0dd84e1",
+      "name": "Get Current Balance",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/loyalty/iiko/customer/wallet/chargeoff",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('iiko Auth (Get Token)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organizationId\": \"org_id\",\n  \"customerId\": \"{{ $json.id }}\",\n  \"walletId\": \"my_wallet_id\",\n  \"sum\": {{ Math.min($json.walletBalances[0].balance, $('Receive Tilda Order').item.json.body.payment.products.reduce((sum, p) => sum + p.amount, 0)) }},\n  \"comment\": \"Bonus write-off\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        64
+      ],
+      "id": "224bfde1-900f-46f2-88df-b1b084c465d3",
+      "name": "Withdraw Bonuses",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/loyalty/iiko/customer/wallet/topup",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('iiko Auth (Get Token)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organizationId\": \"org_id\",\n  \"customerId\": \"{{ $('Get Current Balance').item.json.id }}\",\n  \"walletId\": \"my_id\",\n  \"sum\": {{ \nMath.round(($('Receive Tilda Order').item.json.body.payment.amount - Math.min($('Get Current Balance').item.json.walletBalances[0].balance, $('Receive Tilda Order').item.json.body.payment.products.reduce((sum, p) => sum + p.amount, 0))) * 0.05 ) }},\n  \"comment\": \"Bonuses for orders in the online store\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        880,
+        64
+      ],
+      "id": "2ebbc37a-cce0-418a-8daa-195ee11499e2",
+      "name": "Update Local Balance",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Extract initial data\nconst walletBalance = $('Get Current Balance').item.json.walletBalances[0].balance;\nconst products = $('Receive Tilda Order').item.json.body.payment.products;\n// Parse order total to number (ensure type safety)\nconst orderTotal = parseInt($('Receive Tilda Order').item.json.body.payment.amount);\n\n// 2. Calculate total product sum (to check write-off limits)\nconst productsSum = products.reduce((sum, p) => sum + parseInt(p.amount), 0);\n\n// 3. Calculate redeemed amount (min of wallet balance vs product total)\nconst spentBonus = Math.min(walletBalance, productsSum);\n\n// 4. Calculate remaining amount to pay (Cash/Card)\nconst finalPay = orderTotal - spentBonus;\n\n// 5. Calculate new accrual on the remaining amount (5%)\nconst addedBonus = Math.round(finalPay * 0.05);\n\n// Return calculated figures for next steps\nreturn {\n  json: {\n    added: addedBonus,   // How much was accrued?\n    spent: spentBonus,   // How much was written off?\n    pay: finalPay        // Total to be paid\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        64
+      ],
+      "id": "1b144579-9a32-42c6-b9e9-286dcf449cb3",
+      "name": "Format Admin Message"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. We get the order amount from Tilda\nconst orderTotal = parseInt($('Receive Tilda Order').item.json.body.payment.amount);\n\n// 2. We calculate 5% (round up to the nearest whole number)\nconst bonusToAdd = Math.round(orderTotal * 0.05);\n\n// 3. Return calculated bonus object\nreturn {\n  json: {\n    bonus: bonusToAdd\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        512
+      ],
+      "id": "af45c33e-af74-4932-9de1-fc18eeea59c7",
+      "name": "Calc Bonus Amount"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/loyalty/iiko/customer/wallet/topup",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('iiko Auth (Get Token)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organizationId\": \"org_id\",\n  \"customerId\": \"{{ $('Router: Spend or Earn').item.json.id }}\",\n  \"walletId\": \"my_id\",\n  \"sum\": {{ $json.bonus }},\n  \"comment\": \"Bonuses for ordering on the website\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        512
+      ],
+      "id": "b54b6a26-5a0d-4390-bb0d-09f2b08cce8c",
+      "name": "Accrue Bonuses",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1IH1j7tDItMlfPUjawuXSywX83fMQ_6m9ToIN6exWiMk",
+          "mode": "list",
+          "cachedResultName": "n8n_execution_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IH1j7tDItMlfPUjawuXSywX83fMQ_6m9ToIN6exWiMk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IH1j7tDItMlfPUjawuXSywX83fMQ_6m9ToIN6exWiMk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $now }}",
+            "order_id": "={{ $('Receive Tilda Order').item.json.body.payment.orderid }}",
+            "status": "Success"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1296,
+        512
+      ],
+      "id": "303c9cc1-3b96-4bc0-a5d3-d2715b171a91",
+      "name": "Log Transaction to DB",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "22akbm2gYXgL33dL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "admin_id",
+        "text": "=<b>НОВЫЙ ЗАКАЗ С ИНТЕРНЕТ-МАГАЗИНА \nСО СПИСАНИЕМ БОНУСОВ\n#{{ $('Receive Tilda Order').item.json.body.payment.orderid }}</b>\n\n<b>Способ оплаты:</b> {{ $('Receive Tilda Order').item.json.body.paymentsystem == 'banktransfer' ? 'По Kaspi' : 'Наличными при получении' }}\n\n<b>Имя:</b> {{ $('Receive Tilda Order').item.json.body.name }}\n<b>Телефон:</b> +{{ ($('Receive Tilda Order').item.json.body.phone || $('Receive Tilda Order').item.json.body.Phone).replace(/\\D/g, '') }}\n<b>Адрес:</b> {{ $('Receive Tilda Order').item.json.body.address }}\n<b>День доставки:</b> {{ $('Receive Tilda Order').item.json.body.den_dostavki }} ({{ $('Receive Tilda Order').item.json.body.vremya_dostavki_c }} - {{ $('Receive Tilda Order').item.json.body.vremya_dostavki_do }})\n\n<b>ЗАКАЗ:</b>\n{{ $('Receive Tilda Order').item.json.body.payment.products.map(p => `${p.name} ${p.options ? `\n${p.options[0].option}: ${p.options[0].variant}` : ''}\n${p.quantity} шт х ${p.price.toLocaleString('ru-RU')} = ${p.amount.toLocaleString('ru-RU')} ₸`).join('\\n\\n') }}\n{{ $('Receive Tilda Order').item.json.body.commentary ? `\n<b>Комментарий:</b> ${$('Receive Tilda Order').item.json.body.commentary}` : '' }}\n{{ $('Receive Tilda Order').item.json.body.podpiska ? `\n<b>Клиент хочет подписку на кофе!</b>` : '' }}\n────────\n<b>СУММА ЗАКАЗА:</b> {{ parseInt($('Receive Tilda Order').item.json.body.payment.amount).toLocaleString('ru-RU') }} ₸\n\n<b>БОНУСЫ:</b>\nСписано: -{{ $json.spent.toLocaleString('ru-RU') }}\nНачислено за новый заказ: +{{ $json.added.toLocaleString('ru-RU') }}\n\n<b>ИТОГО К ОПЛАТЕ: {{ $json.pay.toLocaleString('ru-RU') }} ₸</b>",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "❌ Order cancellation",
+                    "additionalFields": {
+                      "callback_data": "=undo_mix|{{ $('Receive Tilda Order').item.json.body.phone.replace(/\\D/g, '') }}|{{ $('Format Admin Message').item.json.spent }}|{{ $('Format Admin Message').item.json.added }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        64
+      ],
+      "id": "38efb35a-926b-4a3f-a05e-f20979fd499e",
+      "name": "Notify Admin (Spending) RU",
+      "webhookId": "2df50306-2c56-4303-8f84-0fffadfe8287",
+      "credentials": {
+        "telegramApi": {
+          "id": "WQOen7Stuv786V3K",
+          "name": "Telegram test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "admin_id",
+        "text": "=<b>НОВЫЙ ЗАКАЗ С ИНТЕРНЕТ-МАГАЗИНА \n#{{ $('Receive Tilda Order').item.json.body.payment.orderid }}</b>\n\n<b>Способ оплаты:</b> {{ $('Receive Tilda Order').item.json.body.paymentsystem == 'banktransfer' ? 'По Kaspi' : 'Наличными при получении' }}\n\n<b>Имя:</b> {{ $('Receive Tilda Order').item.json.body.name }}\n<b>Телефон:</b> +{{ ($('Receive Tilda Order').item.json.body.phone || $('Receive Tilda Order').item.json.body.Phone).replace(/\\D/g, '') }}\n<b>Адрес:</b> {{ $('Receive Tilda Order').item.json.body.address }}\n<b>День доставки:</b> {{ $('Receive Tilda Order').item.json.body.den_dostavki }} ({{ $('Receive Tilda Order').item.json.body.vremya_dostavki_c }} - {{ $('Receive Tilda Order').item.json.body.vremya_dostavki_do }})\n\n<b>ЗАКАЗ:</b>\n{{ $('Receive Tilda Order').item.json.body.payment.products.map(p => `${p.name} ${p.options ? `\n${p.options[0].option}: ${p.options[0].variant}` : ''}\n${p.quantity} шт х ${p.price.toLocaleString('ru-RU')} = ${p.amount.toLocaleString('ru-RU')} ₸`).join('\\n\\n') }}\n{{ $('Receive Tilda Order').item.json.body.commentary ? `\n<b>Комментарий:</b> ${$('Receive Tilda Order').item.json.body.commentary}` : '' }}\n{{ $('Receive Tilda Order').item.json.body.podpiska ? `\n<b>Клиент хочет подписку на кофе!</b>` : '' }}\n\n─────────\n<b>СУММА: {{ parseInt($('Receive Tilda Order').item.json.body.payment.amount).toLocaleString('ru-RU') }} ₸</b>\n\n<b>БОНУСЫ:</b>\nНачислено: +{{ $('Calc Bonus Amount').item.json.bonus.toLocaleString('ru-RU') }} бонусов",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "=❌ Order cancellation",
+                    "additionalFields": {
+                      "callback_data": "=undo_add|{{ ($('Receive Tilda Order').item.json.body.phone || $('Receive Tilda Order').item.json.body.Phone).toString().replace(/\\D/g, '').slice(-10) }}|{{ $('Calc Bonus Amount').item.json.bonus }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        512
+      ],
+      "id": "ac142b41-f69a-440d-a106-d4af5bda3e50",
+      "name": "Notify Admin (Earning) RU",
+      "webhookId": "2df50306-2c56-4303-8f84-0fffadfe8287",
+      "credentials": {
+        "telegramApi": {
+          "id": "WQOen7Stuv786V3K",
+          "name": "Telegram test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://7105.api.greenapi.com/waInstance****/SendMessage/******",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatId\": \"{{ $('Receive Tilda Order').item.json.body.phone.replace(/\\D/g, '') }}@c.us\",\n  \"message\": \"☕️ *Ваш заказ №{{ $('Receive Tilda Order').item.json.body.payment.orderid }} принят!*\\n\\n\n📅 Доставка: {{ $('Receive Tilda Order').item.json.body.den_dostavki }} ({{ $('Receive Tilda Order').item.json.body.vremya_dostavki_c }} - {{ $('Receive Tilda Order').item.json.body.vremya_dostavki_do }})\\n📍 Адрес: {{ $('Receive Tilda Order').item.json.body.address }}\\n\\n\n🛒 *Состав заказа:*\\n{{ $('Receive Tilda Order').item.json.body.payment.products.map(p => `- *${p.name}* (${p.quantity} шт)${p.options ? '\\n  ' + p.options.map(o => o.variant).join(', ') : ''}`).join('\\n\\n') }}\\n\\n{{ $('Receive Tilda Order').item.json.body.podpiska ? \n'🔄 *Вы оформили подписку на кофе!*' : '' }}\\n\\n💰 *Сумма: {{ parseInt($('Receive Tilda Order').item.json.body.payment.amount).toLocaleString('ru-RU') }} ₸*\\n\n💳 Оплата: {{ $('Receive Tilda Order').item.json.body.paymentsystem == 'banktransfer' ? 'Kaspi' : 'Наличные' }}\\n\\n\n🎁 *БОНУСЫ:*\\n{{ $('Calc Bonus Amount').item.json.bonus > 0 ? \n`✅ Начислено: ${$('Calc Bonus Amount').item.json.bonus} BONUS` : 'Бонусы не начислены' }}\\n\\nМы уже начали готовить ваш кофе! Ждите звонка курьера.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1088,
+        512
+      ],
+      "id": "6afc47ed-b637-4797-b273-17c88f4fe0d6",
+      "name": "Notify Customer (WhatsApp) RU",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "content": "Formats admin notification with order details and payment method.",
+        "height": 80,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        864,
+        736
+      ],
+      "typeVersion": 1,
+      "id": "94d152a9-b7a3-4111-bb8e-cadba56a78f9",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "**Workflow Overview**\n1.  **Goal:** Processes Tilda orders, manages loyalty points (earn/burn) via iikoCard API.\n2.  **Input:** Webhook from Tilda (JSON payload with order details).\n3.  **Idempotency:** Prevents duplicate processing via Google Sheets lookup (`order_id`).\n4.  **Logic:** Routes execution based on `spend_bonus` flag (True = Withdraw, False = Accrue).\n5.  **Notifications:** Admin (Telegram), Customer (WhatsApp).\n6.  **Error Handling:** Global workflow catches 4xx/5xx errors.",
+        "height": 336,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1360,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "ef0ab0aa-7823-4c04-bc03-a37087cf6682",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "**Spending Logic (Complex)**\n1.  **Redeem:** Deduced bonuses based on wallet balance (covers full or partial order).\n2.  **Calc Remainder:** Calculates how much the customer must pay by card.\n3.  **Accrue on Remainder:** Calculates new points (5%) based on the actual cash payment amount.\n4.  **Sync:** Updates iikoCard and notifies Admin.",
+        "height": 144,
+        "width": 672
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "24406ca1-b7cc-4faa-8b57-c494449fe4e9",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "**Earning Logic**\n1. Calculates loyalty points (5% of order total).\n2. Accrues points via iikoCard API (POST request).\n3. Sends WhatsApp notification to customer.\n4. Logs successful transaction to DB.",
+        "height": 144,
+        "width": 480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "fc8a467a-90c3-48e9-ad80-b1bf3dee1a55",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "**Idempotency Check**\n*   **Logic:** Checks if `order_id` exists in Google Sheets.\n*   **True:** Order exists -> Stop execution (prevent double-charging).\n*   **False:** New order -> Proceed.",
+        "height": 176
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -544,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "28b104bd-0241-48fc-a3e2-b41d93a43a92",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "**Business Logic Router**\nChecks the `spend_bonus` field from Tilda:\n*   **True:** Customer wants to pay with points.\n*   **False:** Standard accrual."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        128,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "ad18ce62-2899-4792-8dac-6aeb8a8b0eab",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "**Bonus Calculation**\n*   **Input:** `payment.amount` from Webhook.\n*   **Logic:** 5% of order total (rounded).\n*   **Output:** Integer value for API."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        736
+      ],
+      "typeVersion": 1,
+      "id": "ac2d8c50-50ad-4ba4-8947-3c5bfd58310e",
+      "name": "Sticky Note8"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Check Duplicate": {
+      "main": [
+        [],
+        [
+          {
+            "node": "iiko Auth (Get Token)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Existing Order": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Tilda Order": {
+      "main": [
+        [
+          {
+            "node": "Search Existing Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "iiko Auth (Get Token)": {
+      "main": [
+        [
+          {
+            "node": "Sync Customer Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync Customer Profile": {
+      "main": [
+        [
+          {
+            "node": "Router: Spend or Earn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router: Spend or Earn": {
+      "main": [
+        [
+          {
+            "node": "Get Current Balance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calc Bonus Amount",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Current Balance": {
+      "main": [
+        [
+          {
+            "node": "Withdraw Bonuses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Withdraw Bonuses": {
+      "main": [
+        [
+          {
+            "node": "Update Local Balance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Local Balance": {
+      "main": [
+        [
+          {
+            "node": "Format Admin Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Admin Message": {
+      "main": [
+        [
+          {
+            "node": "Notify Admin (Spending) RU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calc Bonus Amount": {
+      "main": [
+        [
+          {
+            "node": "Accrue Bonuses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accrue Bonuses": {
+      "main": [
+        [
+          {
+            "node": "Notify Admin (Earning) RU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Admin (Spending) RU": {
+      "main": [
+        [
+          {
+            "node": "Log Transaction to DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Admin (Earning) RU": {
+      "main": [
+        [
+          {
+            "node": "Notify Customer (WhatsApp) RU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Customer (WhatsApp) RU": {
+      "main": [
+        [
+          {
+            "node": "Log Transaction to DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Almaty",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "hqRcKQkYO4KNl7CpVzjbg"
+  },
+  "versionId": "5dacf37f-572c-40a2-903a-753b9ffcd072",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "03b67b3e60aa493ec1244124aace506e5b72662a5ebfe65ae58c0d351a372da8"
+  },
+  "id": "s9Ah877ioKzNigtUAcxiU",
+  "tags": []
+}

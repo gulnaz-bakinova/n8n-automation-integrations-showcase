@@ -1,0 +1,211 @@
+{
+  "name": "02_customer_balance_check",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "check-balance",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        256
+      ],
+      "id": "951dbeb5-7b57-4431-adbf-cf9708ffe807",
+      "name": "Incoming Balance Request",
+      "webhookId": "170ece0a-660a-4327-81ca-3c022c687004"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/access_token",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apiLogin",
+              "value": "REPLACE_WITH_SECRET"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        256
+      ],
+      "id": "b7ae14ea-64d0-403b-a799-370ab1d9c645",
+      "name": "iiko Auth (Get Token)",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-ru.iiko.services/api/1/loyalty/iiko/customer/info",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"organizationId\": \"org_id\",\n  \"phone\": \"+7{{ ($('Incoming Balance Request').item.json.body.phone || $('Incoming Balance Request').item.json.body.Phone).toString().replace(/\\D/g, '').slice(-10) }}\",\n  \"type\": \"phone\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        256
+      ],
+      "id": "ce15ea3c-2e39-4181-8dbe-4240e6d28f5f",
+      "name": "Fetch Customer Info",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = items[0].json;\n// Convert response to string to check for specific keywords (even if complex object)\nconst strResponse = JSON.stringify(response);\n\n// 1. SUCCESS: Wallet found (customer exists)\nif (response.walletBalances && response.walletBalances.length > 0) {\n  return { json: { balance: response.walletBalances[0].balance } };\n}\n\n// 2. CONDITIONAL SUCCESS: \"No guest\" or \"Invalid phone\" returned\n// We treat this as a new customer with 0 balance, not an API error.\nif (strResponse.includes(\"There is no user\") || strResponse.includes(\"Incorrect phone\") || strResponse.includes(\"Bad request\")) {\n  return { json: { balance: 0 } };\n}\n\n// 3. CRITICAL FAILURE: If we reached here, something unexpected happened\n// (e.g., \"Unauthorized\", \"Internal Server Error\")\n// This throws an error to trigger the Global Error Workflow\nthrow new Error(\"IIKO API ERROR: \" + strResponse);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        256
+      ],
+      "id": "8c168ec1-b0bb-4650-987f-a9c98a7d17e1",
+      "name": "Normalize Balance Logic"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"balance\": {{ $json.balance }}\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        880,
+        256
+      ],
+      "id": "ff273c34-2505-4ad5-9b6a-1a078a81732c",
+      "name": "Return Response to Tilda"
+    },
+    {
+      "parameters": {
+        "content": "**Balance Check API**\nActs as a proxy between Tilda (frontend) and iikoCard (backend).\n1.  **Auth:** Gets temporary access token.\n2.  **Fetch:** Requests customer wallet by phone number.\n3.  **Logic:** Handles \"User not found\" errors gracefully by returning 0 balance.\n4.  **Response:** Returns JSON `{ \"balance\": X }` immediately.",
+        "height": 240,
+        "width": 368
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -448,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "071eced9-3c7a-4451-b2eb-cab09dfe488f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "**Error Handling Logic**\nInstead of failing when a customer is not found (404/400 from iiko), we catch this specific case and return `0` balance.\nThis allows new customers to see \"0 points\" instead of an error on the website.",
+        "height": 176
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        592,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "55277959-abeb-4858-89d1-b14fc5b2a3c2",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Incoming Balance Request": {
+      "main": [
+        [
+          {
+            "node": "iiko Auth (Get Token)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "iiko Auth (Get Token)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Customer Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Customer Info": {
+      "main": [
+        [
+          {
+            "node": "Normalize Balance Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Balance Logic": {
+      "main": [
+        [
+          {
+            "node": "Return Response to Tilda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Almaty",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "hqRcKQkYO4KNl7CpVzjbg"
+  },
+  "versionId": "03304e7f-eb1b-4fac-9ad7-7339399d490a",
+  "meta": {
+    "instanceId": "03b67b3e60aa493ec1244124aace506e5b72662a5ebfe65ae58c0d351a372da8"
+  },
+  "id": "O9BqVm3b1kegEcB3n3Bow",
+  "tags": []
+}
