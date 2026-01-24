@@ -42,16 +42,17 @@ Complex logic handles idempotency, math calculations (5% accrual / partial redem
 
 ## 🧪 How to Run a Demo
 
-Since this is a backend integration, you can simulate triggers using **Postman** or **cURL**.
+Since this is a backend integration, you can simulate triggers using Postman or cURL.
 
-*   **Test Data:** Full JSON payloads (Tilda orders, Telegram callbacks) are located in the [`sample_payloads/`](sample_payloads/) directory.
-*   **Execution:** Send a `POST` request to the n8n webhook URL using the data from these files to trigger the workflow.
-
+- **Test Data:** Full JSON payloads (Tilda orders, Telegram callbacks) are located in the [`sample_payloads/`](./sample_payloads) directory.
+- **Execution:** Send a `POST` request to the n8n webhook URL using the data from these files to trigger the workflow.
 
 ## Expected Outcome
-1.  n8n checks Google Sheet (see logs snapshot: [`assets/execution-logs.png`](assets/execution-logs.png)).
-2.  If `orderid` is new → Calculates 5% points → Sends to iiko → Alerts Admin.
-3.  If `orderid` exists → Stops execution (Idempotency).
+
+- n8n checks Google Sheet (see logs snapshot: [`assets/execution-logs.png`](./assets/execution-logs.png)).
+- If `orderid` is new → Calculates 5% points → Sends to iiko → Alerts Admin.
+- If `orderid` exists → Stops execution (Idempotency).
+
 
 ---
 
