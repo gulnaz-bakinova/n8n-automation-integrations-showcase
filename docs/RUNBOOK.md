@@ -9,7 +9,7 @@ This guide describes how to troubleshoot, debug, and recover from common failure
 **Cause:** iiko servers are temporarily overloaded or down.
 **Automated Fix:** The workflows have a `Retry On Fail` policy (3 attempts, 3s delay).
 **Manual Action:**
-1. Check if [iiko Status Page](https://status.iiko.ru) reports outages.
+1. Check iiko service status for any ongoing incidents or maintenance announcements.
 2. If the error persists > 1 hour, contact iiko support.
 
 ### 2. Authorization Failure (401 Unauthorized)
