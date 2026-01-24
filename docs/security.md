@@ -4,7 +4,7 @@ Security is a priority in this integration, dealing with financial data (loyalty
 
 ## 1. Credentials Management
 *   **No Hardcoded Secrets:** All API keys, tokens, and passwords are removed from the code.
-*   **Environment Variables:** The system uses `.env` variables (see [`ENV.example`](./ENV.example)) to inject secrets at runtime.
+*   **Environment Variables:** The system uses `.env` variables (see [`ENV.example`](../ENV.example)) to inject secrets at runtime.
 *   **n8n Credentials:** n8n's internal encrypted credential store is used for Google OAuth2 and Telegram tokens.
 
 ## 2. Network Security (API Gateway Pattern)
