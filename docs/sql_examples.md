@@ -15,7 +15,7 @@ Before processing a new order, we check if the `order_id` already exists to prev
 ```sql
 SELECT count(*)
 FROM orders_log
-WHERE order_id = '1365207519';
+WHERE order_id = '1234567890';
 -- If result > 0, stop execution.
 ```
 
