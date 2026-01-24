@@ -108,3 +108,4 @@ Since this is a backend integration, you can simulate triggers using Postman or 
 Let's connect!
 [LinkedIn](https://www.linkedin.com/in/gulnaz-bakinova/) 
 
+This repository is provided for portfolio and demonstration purposes only. It is not intended for production use.
