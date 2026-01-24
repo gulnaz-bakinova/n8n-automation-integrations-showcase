@@ -51,3 +51,15 @@ sequenceDiagram
         n8n->>DB: Log Transaction (Success)
         n8n->>Admin: Notify Admin (New Order)
     end
+
+### 🛠 Key Design Decisions
+
+#### API Gateway Pattern
+n8n acts as a secure middleware. The frontend (Tilda) never communicates with iikoCard directly. This hides API keys and business logic from the public web.
+
+#### Idempotency
+To prevent double-charging or double-accrual on network retries, every order is checked against a Google Sheets ledger using the unique `order_id` before processing.
+
+#### Fail-Safe Operations
+- Retry Policy: All HTTP requests to iikoCard have a 3x retry strategy to handle transient network glitches.
+- Global Error Handler: A dedicated workflow catches unexpected failures and logs them for audit.
