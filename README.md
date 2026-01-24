@@ -1,5 +1,7 @@
 # ☕ Loyalty System Automation (Tilda + iikoCard)
 
+[🇷🇺 Русская версия](README.ru.md)
+
 > **Production-ready middleware** developed for a coffee shop chain (4 locations) in Almaty.
 > Orchestrates data flow between Frontend (Tilda), Loyalty Engine (iikoCard), and Messaging Services.
 
