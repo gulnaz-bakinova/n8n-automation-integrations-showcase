@@ -5,26 +5,29 @@ This guide describes how to troubleshoot, debug, and recover from common failure
 ## 🚨 Common Incident Scenarios
 
 ### 1. iikoCard API Timeout (502/504)
-**Symptoms:** Error logs show `ECONNRESET` or `Gateway Timeout`.
-**Cause:** iiko servers are temporarily overloaded or down.
-**Automated Fix:** The workflows have a `Retry On Fail` policy (3 attempts, 3s delay).
+*   **Symptoms:** Error logs show `ECONNRESET` or `Gateway Timeout`.
+*   **Cause:** iiko servers are temporarily overloaded or down.
+*   **Automated Fix:** The workflows have a `Retry On Fail` policy (3 attempts, 3s delay).
+
 **Manual Action:**
 1. Check iiko service status for any ongoing incidents or maintenance announcements.
 2. If the error persists > 1 hour, contact iiko support.
 
+
 ### 2. Authorization Failure (401 Unauthorized)
-**Symptoms:** Workflow fails at `iiko Auth (Get Token)` node.
-**Cause:** API Login is incorrect or the user password changed.
-**Action:**
+*   **Symptoms:** Workflow fails at `iiko Auth (Get Token)` node.
+*   **Cause:** API Login is incorrect or the user password changed.
+*   **Action:**
 1. Open n8n Editor.
 2. Navigate to `iiko Auth` node.
 3. Verify `userId` and `userSecret` in the body.
 4. Update credentials if necessary.
 
+
 ### 3. Duplicate Order Warning
-**Symptoms:** Execution stops at `Check Duplicate` node (Logic: True).
-**Cause:** Tilda sent the webhook twice (common network behavior).
-**Action:** **Do nothing.** This is expected behavior. The system successfully prevented a double transaction.
+*   **Symptoms:** Execution stops at `Check Duplicate` node (Logic: True).
+*   **Cause:** Tilda sent the webhook twice (common network behavior).
+*   **Action:** **Do nothing.** This is expected behavior. The system successfully prevented a double transaction.
 
 ---
 
