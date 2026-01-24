@@ -10,7 +10,7 @@ Tilda sends a `POST` request to n8n whenever an order is placed.
 ```json
 {
   "payment": {
-    "orderid": "1365207519",
+    "orderid": "1234567890",
     "amount": "2500",
     "products": [
       {
@@ -20,7 +20,7 @@ Tilda sends a `POST` request to n8n whenever an order is placed.
       }
     ]
   },
-  "name": "Jane Doe",
+  "name": "Client name",
   "phone": "+79991234567",
   "formid": "form12345"
 }
