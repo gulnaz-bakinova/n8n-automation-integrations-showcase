@@ -5,7 +5,7 @@ This project orchestrates data flow between 4 main external systems.
 ## 1. Tilda Webhook (Frontend Trigger)
 Tilda sends a `POST` request to n8n whenever an order is placed.
 
-**Endpoint:** `https://n8n.your-domain.com/webhook/tilda-order`
+**Endpoint:** `https://n8n.your-domain.com/webhook/tilda-order`  
 **Payload Format (JSON):**
 ```json
 {
@@ -24,6 +24,8 @@ Tilda sends a `POST` request to n8n whenever an order is placed.
   "phone": "+79991234567",
   "formid": "form12345"
 }
+```
+
 ## 2. iikoCard API (Loyalty Engine)
 Used for managing customer balances.
 
