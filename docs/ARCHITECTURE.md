@@ -6,12 +6,12 @@ This project implements a Loyalty System Middleware that connects a frontend web
 
 | Component | Type | Role |
 | :--- | :--- | :--- |
-| **Tilda** | Frontend + Custom JS | Website with injected scripts for Balance Check & Point Redemption UI. |
+| **Tilda** | Frontend / Trigger | Captures customer orders and sends Webhooks. |
 | **n8n** | Orchestrator | Handles business logic, API transformations, and routing. |
 | **iikoCard** | Backend API | Stores customer balances, handles accruals and withdrawals. |
 | **Google Sheets** | Database (Lightweight) | Stores execution logs and handles Idempotency (deduplication). |
 | **Telegram** | Admin UI | Notifies admins and allows manual refund operations via UI buttons. |
-| **WhatsApp** | Notification Service | Sends loyalty updates to customers. |
+| **WhatsApp** | Notification Service | Sends loyalty updates to customers (via GreenAPI/Wazzup). |
 
 ---
 
@@ -51,15 +51,16 @@ sequenceDiagram
         n8n->>DB: Log Transaction (Success)
         n8n->>Admin: Notify Admin (New Order)
     end
+```
 
-### 🛠 Key Design Decisions
+## 🛠 Key Design Decisions
 
-#### API Gateway Pattern
+### 1. API Gateway Pattern
 n8n acts as a secure middleware. The frontend (Tilda) never communicates with iikoCard directly. This hides API keys and business logic from the public web.
 
-#### Idempotency
+### 2. Idempotency
 To prevent double-charging or double-accrual on network retries, every order is checked against a Google Sheets ledger using the unique `order_id` before processing.
 
-#### Fail-Safe Operations
-- Retry Policy: All HTTP requests to iikoCard have a 3x retry strategy to handle transient network glitches.
-- Global Error Handler: A dedicated workflow catches unexpected failures and logs them for audit.
+### 3. Fail-Safe Operations
+*   **Retry Policy:** All HTTP requests to iikoCard have a **3x retry** strategy to handle transient network glitches.
+*   **Global Error Handler:** A dedicated workflow catches unexpected failures and logs them for audit.
