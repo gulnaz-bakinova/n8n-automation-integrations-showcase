@@ -1,54 +1,45 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2867
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww11220\viewh12100\viewkind0
-\deftab560
-\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
-
-\f0\fs26 \cf0   \{\
-    "params": \{\},\
-    "query": \{\},\
-    "body": \{\
-      "name": "Test Client",\
-      "address": "My street",\
-      "den_dostavki": "19.01.2026",\
-      "vremya_dostavki_c": "14:00",\
-      "vremya_dostavki_do": "18:00",\
-      "phone": "+7 (700) 123-45-67",\
-      "paymentsystem": "banktransfer",\
-      "payment": \{\
-        "orderid": "1234567891",\
-        "products": [\
-          \{\
-            "name": "Brazil COSTO DO Brazil",\
-            "quantity": 1,\
-            "amount": 4000,\
-            "price": "4000",\
-            "options": [\
-              \{\
-                "option": "Weight",\
-                "variant": "0,25 kg"\
-              \},\
-              \{\
-                "option": "Grind size",\
-                "variant": "Whole beans"\
-              \}\
-            ]\
-          \},\
-          \{\
-            "name": "\uc0\u1050 \u1086 \u1092 \u1077  \u1076 \u1083 \u1103  \u1101 \u1089 \u1087 \u1088 \u1077 \u1089 \u1089 \u1086  Colombia Supremo Cattura 250 \u1075 ",\
-            "quantity": 1,\
-            "amount": 4750,\
-            "price": "4750"\
-          \}\
-        ],\
-        "amount": "8750"\
-      \},\
-      "formid": "form1222223331",\
-      "formname": "Cart",\
-      "spend_bonus": false\
-    \},\
-    "webhookUrl": "https://n8n.your-domain.com/webhook/tilda-order",\
-    "executionMode": "production"\
-  \}}
+{
+    "params": {},
+    "query": {},
+    "body": {
+      "name": "client_name",
+      "address": "client_address",
+      "den_dostavki": "19.01.2026",
+      "vremya_dostavki_c": "14:00",
+      "vremya_dostavki_do": "18:00",
+      "phone": "+7 (707) 393-16-96",
+      "paymentsystem": "banktransfer",
+      "payment": {
+        "orderid": "1234567890",
+        "products": [
+          {
+            "name": "Brazil COSTO DO Brazil",
+            "quantity": 1,
+            "amount": 4000,
+            "price": "4000",
+            "options": [
+              {
+                "option": "Weight",
+                "variant": "0,25 kg"
+              },
+              {
+                "option": "Grind size",
+                "variant": "Whole beanes"
+              }
+            ]
+          },
+          {
+            "name": "Кофе для эспрессо Colombia Supremo Cattura 250 г",
+            "quantity": 1,
+            "amount": 4750,
+            "price": "4750"
+          }
+        ],
+        "amount": "8750"
+      },
+      "formid": "form1234567890",
+      "formname": "Cart"
+    },
+    "webhookUrl": "https://n8n.your-domain.com/webhook/tilda-order",
+    "executionMode": "production"
+  }
