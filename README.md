@@ -81,7 +81,7 @@ Since this is a backend integration, you can simulate triggers using **Postman**
 
 1.  **Environment Variables:**
 
-    Rename [`ENV.example`](ENV.example) to `.env` and fill in your API keys.
+    Rename [`.env.example`](.env.example) to `.env` and fill in your API keys.
     *   *Note: Never commit real keys to the repository.*
 
 
