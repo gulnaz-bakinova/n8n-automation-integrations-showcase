@@ -62,7 +62,7 @@ Since this is a backend integration, you can simulate triggers using Postman or 
 
 | Workflow | Description |
 |----------|-------------|
-| [`01_order_processing_tilda.json`](01_order_processing_tilda.json) | **Core Logic.** Receives webhook, checks duplicates, calculates points, syncs with iiko |
+| [`01_order_processing_tilda.json`](01_order_processing_tilda.json) | **Core Logic.** Receives webhook, checks duplicates, calculates points, syncs with iiko & notifies customer (WhatsApp) |
 | [`02_customer_balance_check.json`](02_customer_balance_check.json) | **Proxy API.** Handles "Check Balance" requests from the website |
 | [`03_admin_refund_handler.json`](03_admin_refund_handler.json) | **Admin Tools.** Handles "Cancel Order" button clicks, revokes points, and updates DB |
 | [`99_global_error_handler.json`](99_global_error_handler.json) | **Monitoring.** Catches failures from all other workflows |
