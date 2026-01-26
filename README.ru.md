@@ -60,7 +60,7 @@
 
 | Воркфлоу | Описание |
 |----------|-------------|
-| [`01_order_processing_tilda.json`](01_order_processing_tilda.json) | **Основная логика.** Принимает вебхук, ищет дубли, считает баллы, синхронизирует с iiko |
+| [`01_order_processing_tilda.json`](01_order_processing_tilda.json) | **Основная логика.** Принимает вебхук, ищет дубли, считает баллы, синхронизирует с iiko и уведомляет клиента (WhatsApp) |
 | [`02_customer_balance_check.json`](02_customer_balance_check.json) | **Прокси API.** Обрабатывает запросы "Проверить баланс" с сайта |
 | [`03_admin_refund_handler.json`](03_admin_refund_handler.json) | **Инструменты Админа.** Обрабатывает клики "Отмена заказа", аннулирует баллы, обновляет БД |
 | [`99_global_error_handler.json`](99_global_error_handler.json) | **Мониторинг.** Ловит падения всех остальных процессов |
