@@ -7,7 +7,7 @@ This project implements a Loyalty System Middleware that connects a frontend web
 | Component | Type | Role |
 | :--- | :--- | :--- |
 | **Tilda** | Frontend / Trigger | Captures customer orders and sends Webhooks. |
-| **n8n** | Orchestrator | Handles business logic, API transformations, and routing. |
+| **n8n** | Orchestrator (Railway PaaS) | Handles business logic, API transformations, and routing. |
 | **iikoCard** | Backend API | Stores customer balances, handles accruals and withdrawals. |
 | **Google Sheets** | Database (Lightweight) | Stores execution logs and handles Idempotency (deduplication). |
 | **Telegram** | Admin UI | Notifies admins and allows manual refund operations via UI buttons. |
