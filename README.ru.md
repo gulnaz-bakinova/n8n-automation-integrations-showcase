@@ -1,4 +1,4 @@
-# ☕ Автоматизация системы лояльности (Tilda + iikoCard)
+# Интеграция системы лояльности (Production): Tilda + iikoCard (n8n, APIs, webhooks)
 
 [🇺🇸 English Version](README.md)
 
