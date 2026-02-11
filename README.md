@@ -74,6 +74,7 @@ Since this is a backend integration, you can simulate triggers using Postman or 
 *   [🔐 Security](docs/security.md) — How secrets and PII are protected.
 *   [📖 Runbook](docs/RUNBOOK.md) — Troubleshooting guide.
 *   [📊 SQL Examples](docs/sql_examples.md) — Analytical queries.
+*   [🧪 Test Scenarios](docs/TEST_SCENARIOS.md) — QA edge cases and validation results.
 *   [💻 Frontend Scripts](docs/) — Custom JS code used in Tilda.
 
 ---
