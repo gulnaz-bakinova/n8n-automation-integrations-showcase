@@ -37,6 +37,7 @@ Complex logic handles idempotency, math calculations (5% accrual / partial redem
 *   **🚨 Global Error Handling:** A dedicated "Watchdog" workflow catches 4xx/5xx errors, logs them to DB, and alerts the DevOps team.
 *   **🔄 Fail-Safe Mechanisms:** HTTP Requests utilize a `3x Retry` policy to handle transient network issues.
 *   **💻 Custom Frontend Integration:** Vanilla JS scripts (see [`docs/`](docs/)) injected into Tilda to enable dynamic balance checks.
+*   **📈 Launch Results:** During the first two months of operation (soft launch), the system demonstrated 100% reliability: 5,600 loyalty points were automatically accrued, and 1,500+ points were successfully redeemed by returning customers. The system operated in a real production environment with live transactions and real customers, with zero processing errors.
 
 ---
 
