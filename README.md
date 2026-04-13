@@ -105,7 +105,7 @@ Since this is a backend integration, you can simulate triggers using Postman or 
 
 **Gulnaz Bakinova**
 
-*Integration & Automation Engineer (n8n / Low-code)*
+*AI Automation & Applied AI Engineer · End-to-end automation for sales / support / ops*
 
 Let's connect!
 [LinkedIn](https://www.linkedin.com/in/gulnaz-bakinova/) 
