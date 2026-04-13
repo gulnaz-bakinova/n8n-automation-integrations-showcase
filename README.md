@@ -2,7 +2,7 @@
 
 [🇷🇺 Русская версия](README.ru.md)
 
-> **Production-ready middleware** developed for a coffee shop chain (4 locations) in Almaty.
+> **Live in production** developed for a coffee shop chain (4 locations) in Almaty.
 > Orchestrates data flow between Frontend (Tilda), Loyalty Engine (iikoCard), and Messaging Services.
 
 ![n8n](https://img.shields.io/badge/n8n-Workflow_Automation-orange?style=flat-square)
